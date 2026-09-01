@@ -493,8 +493,6 @@ LAB_2D13:
 
       LDX   #$FF              ; set byte
       STX   Clineh            ; set current line high byte (set immediate mode)
-      TXS; reset stack pointer
-
       LDA   #$4C              ; code for JMP
       STA   Fnxjmp            ; save for jump vector for functions
 
@@ -8882,3 +8880,9 @@ LAB_IMSG:    .byte " Extra ignored",$0D,$0A,$00
 LAB_REDO:    .byte " Redo from start",$0D,$0A,$00
 
 AA_end_basic:
+
+.byte $EA
+.export basic_entry
+basic_entry:
+      JSR   LAB_COLD
+      RTS
