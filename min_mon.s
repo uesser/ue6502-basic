@@ -5,7 +5,8 @@
 ; running [F6] then start the code with the RESET [CTRL][SHIFT]R. Just selecting RUN
 ; will do nothing, you'll still have to do a reset to run the code.
 
-      .include "basic.s"
+.include "basic_cpu.inc"
+.include "basic.s"
 
 ; put the IRQ and MNI code in RAM so that it can be changed
 
@@ -20,32 +21,32 @@ NMI_vec     = IRQ_vec+$0A     ; NMI code vector
 
 ; reset vector points here
 
-RES_vec
-      CLD                     ; clear decimal mode
+RES_vec:
+      CLD; clear decimal mode
       LDX   #$FF              ; empty stack
-      TXS                     ; set the stack
+      TXS; set the stack
       JSR ACIAsetup
 
 ; set up vectors and interrupt code, copy them to page 2
 
       LDY   #END_CODE-LAB_vec ; set index/count
-LAB_stlp
+LAB_stlp:
       LDA   LAB_vec-1,Y       ; get byte from interrupt code
       STA   VEC_IN-1,Y        ; save to RAM
-      DEY                     ; decrement index/count
+      DEY; decrement index/count
       BNE   LAB_stlp          ; loop if more to do
 
 ; now do the signon message, Y = $00 here
 
-LAB_signon
+LAB_signon:
       LDA   LAB_mess,Y        ; get byte from sign on message
       BEQ   LAB_nokey         ; exit loop if done
 
       JSR   V_OUTP            ; output character
-      INY                     ; increment index
+      INY; increment index
       BNE   LAB_signon        ; loop, branch always
 
-LAB_nokey
+LAB_nokey:
       JSR   V_INPT            ; call scan input device
       BCC   LAB_nokey         ; loop if no key
 
@@ -58,7 +59,7 @@ LAB_nokey
 
       JMP   LAB_COLD          ; do EhBASIC cold start
 
-LAB_dowarm
+LAB_dowarm:
       JMP   LAB_WARM          ; do EhBASIC warm start
 
 ; Polled 65c51 I/O routines adapted to EhBASIC. Delay routine from
@@ -69,7 +70,7 @@ ACIA_STATUS  = $8401
 ACIA_COMMAND = $8402
 ACIA_CONTROL = $8403
 
-ACIAsetup
+ACIAsetup:
       LDA #$00                ; write anything to status register for program reset
       STA ACIA_STATUS
       LDA #$0B                ; %0000 1011 = Receiver odd parity check
@@ -86,47 +87,47 @@ ACIAsetup
       STA ACIA_CONTROL        ; set control register  
       RTS
 
-ACIAout
-      PHA                     ; save A
+ACIAout:
+      PHA; save A
       LDA ACIA_STATUS         ; Read (and ignore) ACIA status register
-      PLA                     ; restore A
+      PLA; restore A
       STA ACIA_TX             ; write byte
       JSR ACIAdelay           ; delay because of bug
       RTS
 
-ACIAdelay
+ACIAdelay:
       PHY                     ; Save Y Reg
       PHX                     ; Save X Reg
-DELAY_LOOP
+DELAY_LOOP:
       LDY   #6                ; Get delay value (clock rate in MHz 2 clock cycles)
-MINIDLY
+MINIDLY:
       LDX   #$68              ; Seed X reg
-DELAY_1
-      DEX                     ; Decrement low index
+DELAY_1:
+      DEX; Decrement low index
       BNE   DELAY_1           ; Loop back until done
-      DEY                     ; Decrease by one
+      DEY; Decrease by one
       BNE   MINIDLY           ; Loop until done
       PLX                     ; Restore X Reg
       PLY                     ; Restore Y Reg
-DELAY_DONE
-      RTS                     ; Delay done, return
+DELAY_DONE:
+      RTS; Delay done, return
 
-ACIAin
+ACIAin:
       LDA ACIA_STATUS         ; get ACIA status
       AND #$08                ; mask rx buffer status flag
       BEQ LAB_nobyw           ; branch if no byte waiting
       LDA ACIA_RX             ; get byte from ACIA data port
-      SEC                     ; flag byte received
+      SEC; flag byte received
       RTS
-LAB_nobyw
-      CLC                     ; flag no byte received
-no_load                       ; empty load vector for EhBASIC
-no_save                       ; empty save vector for EhBASIC
+LAB_nobyw:
+      CLC; flag no byte received
+no_load:                       ; empty load vector for EhBASIC
+no_save:                       ; empty save vector for EhBASIC
       RTS
 
 ; vector tables
 
-LAB_vec
+LAB_vec:
       .word ACIAin            ; byte in from simulated ACIA
       .word ACIAout           ; byte out to simulated ACIA
       .word no_load           ; null load vector for EhBASIC
@@ -134,29 +135,29 @@ LAB_vec
 
 ; EhBASIC IRQ support
 
-IRQ_CODE
-      PHA                     ; save A
+IRQ_CODE:
+      PHA; save A
       LDA   IrqBase           ; get the IRQ flag byte
-      LSR                     ; shift the set b7 to b6, and on down ...
+      LSR; shift the set b7 to b6, and on down ...
       ORA   IrqBase           ; OR the original back in
       STA   IrqBase           ; save the new IRQ flag byte
-      PLA                     ; restore A
+      PLA; restore A
       RTI
 
 ; EhBASIC NMI support
 
-NMI_CODE
-      PHA                     ; save A
+NMI_CODE:
+      PHA; save A
       LDA   NmiBase           ; get the NMI flag byte
-      LSR                     ; shift the set b7 to b6, and on down ...
+      LSR; shift the set b7 to b6, and on down ...
       ORA   NmiBase           ; OR the original back in
       STA   NmiBase           ; save the new NMI flag byte
-      PLA                     ; restore A
+      PLA; restore A
       RTI
 
-END_CODE
+END_CODE:
 
-LAB_mess
+LAB_mess:
       .byte $0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
                               ; sign on string
 
