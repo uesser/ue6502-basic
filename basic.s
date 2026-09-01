@@ -362,6 +362,7 @@ TK_BITSET         = TK_SWAP+1       ; BITSET token
 TK_BITCLR         = TK_BITSET+1     ; BITCLR token
 TK_IRQ            = TK_BITCLR+1     ; IRQ token
 TK_NMI            = TK_IRQ+1        ; NMI token
+TK_EXIT           = TK_NMI+1        ; EXIT token
 
 ; secondary command tokens, can't start a statement
 
@@ -1689,6 +1690,13 @@ LAB_1651:
 
 LAB_165E:
       JMP   LAB_1274          ; go do warm start
+
+; leave BASIC and return to the caller of basic_entry
+
+LAB_EXIT:
+      PLA; discard BASIC interpreter return address low byte
+      PLA; discard BASIC interpreter return address high byte
+      RTS
 
 ; perform RESTORE
 
@@ -8152,6 +8160,7 @@ LAB_CTBL:
       .word LAB_BITCLR-1      ; BITCLR          new command
       .word LAB_IRQ-1         ; IRQ             new command
       .word LAB_NMI-1         ; NMI             new command
+      .word LAB_EXIT-1        ; EXIT            new command
 
 ; function pre process routine table
 
@@ -8417,6 +8426,8 @@ LBB_END:
       .byte "ND",TK_END       ; END
 LBB_EOR:
       .byte "OR",TK_EOR       ; EOR
+LBB_EXIT:
+      .byte "XIT",TK_EXIT     ; EXIT
 LBB_EXP:
       .byte "XP(",TK_EXP      ; EXP(
       .byte $00
