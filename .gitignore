@@ -1,3 +1,16 @@
-basic.bin
-min_mon.o
-basic.o
+.project
+.vscode/
+.pi/
+**/build/
+*.bin
+*.o
+*.d
+*.dbg
+*.raw
+*.rom
+*.map
+*.lbl
+.clang-format
+
+# juststart: local-only session notes and harness state
+.ai-harness/session-notes.md
